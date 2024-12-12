@@ -1,0 +1,578 @@
+<p>&nbsp;</p>
+<style>
+        /* استایل‌ها به همان صورت قبلی باقی می‌مانند */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: auto;
+            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+            position: relative;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* Hide all links */
+        a {
+            display: none;
+        }
+
+        /* Loader Styles */
+        #loader {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            text-align: center;
+        }
+
+        #progress {
+            width: 80%;
+            height: 30px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        #bar {
+            width: 0;
+            height: 100%;
+            background-color: #76c7c0;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.2s ease;
+        }
+
+        #einsteinTip {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+
+        /* Gradio App Container */
+        gradio-app {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            zoom: 0.8;
+            min-height: 100vh;
+            margin-top: 0;
+        }
+
+        /* Modal and Notification Styles */
+        .modal, .notification {
+            display: none;
+            position: fixed;
+            z-index: 10002;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            color: #333;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .modal img, .notification img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .modal button, .notification button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 16px;
+        }
+
+        .modal button:hover, .notification button:hover {
+            background-color: #45a049;
+        }
+
+        .close-button {
+            background-color: #d9534f;
+            color: white;
+        }
+
+        .close-button:hover {
+            background-color: #c9302c;
+        }
+
+        #downloadButton {
+            display: none; /* Initially hidden */
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 10003;
+            font-size: 16px;
+        }
+
+        #downloadButton:hover {
+            background-color: #45a049;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Success Notification Styles */
+        .notification.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Optional: Add transition for smooth appearance */
+        .notification {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        /* Button Container Styles */
+        .button-container {
+            display: none; /* Initially hidden */
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            /* Removed the conflicting display: flex; */
+            justify-content: space-between;
+            z-index: 10004;
+        }
+
+        .translator-button, .prompt-button {
+            background-color: rgb(84, 110, 122);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .translator-button:hover, .prompt-button:hover {
+            background-color: #6c7b8a;
+        }
+
+        /* Prompt Modal Styles */
+        .prompt-modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .prompt-category {
+            background: #ffffff;
+            padding: 12px 20px;
+            margin: 10px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 80%;
+            max-width: 300px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .prompt-category:hover {
+            background-color: #f9f9f9;
+            transform: translateY(-2px);
+        }
+
+        .prompt-category .icon {
+            margin-left: 8px;
+            font-size: 20px;
+            color: #3498db;
+        }
+
+        .prompt-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prompt-item {
+            background-color: #fff;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            text-align: left;
+            font-weight: bold;
+            font-size: 14px;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+        .prompt-item:hover {
+            background-color: #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .prompt-text-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: right;
+        }
+
+        .prompt-text {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .persian-translation {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            font-size: 20px;
+            color: #555;
+            transition: color 0.3s;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .copy-icon:hover {
+            color: #000;
+        }
+
+        /* Pagination Buttons */
+        .pagination-button {
+            margin: 5px 5px 0 5px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .pagination-button:hover {
+            background-color: #45a049;
+        }
+
+        /* Page Info */
+        .page-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 600px) {
+            .translator-button, .prompt-button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .prompt-category, .prompt-item {
+                width: 95%;
+            }
+
+            .pagination-button {
+                width: 48%;
+            }
+        }
+
+        /* مترجم سفارشی فارسی به انگلیسی استایل‌ها */
+        /* تنظیمات پایه */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* کانتینر مترجم سفارشی */
+        .translator-container {
+            max-width: 600px;
+            width: 90%;
+            margin: 20px auto;
+            text-align: center;
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            background-color: #fff;
+        }
+
+        .translator-container h2 {
+            margin-bottom: 20px;
+            color: #34495e;
+            font-size: 22px;
+        }
+
+        /* استایل اسپینر */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* نمایش نتیجه ترجمه */
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 50px;
+            font-size: 16px;
+            color: #000;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #000;
+            background-color: #f4f4f9;
+        }
+
+        /* دکمه کپی */
+        .copy-button {
+            margin-top: 10px;
+            background-color: #3498db;
+            border: none;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            display: none; /* پیش‌فرض: نمایش نده */
+        }
+
+        .copy-button:hover {
+            background-color: #2980b9;
+        }
+
+        /* استایل پیام موفقیت */
+        .success-message {
+            display: none;
+            margin-top: 10px;
+            color: #2ecc71;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* استایل textarea */
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid #000;
+            resize: vertical;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: #76c7c0;
+            outline: none;
+        }
+
+        /* استایل هدر انیمیشنی */
+        .animated-header {
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            background: linear-gradient(270deg, #ff6ec4, #7873f5, #4b2bf4, #ff6ec4);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientAnimation 10s ease infinite, moveUpDown 4s ease-in-out infinite;
+            margin: 20px 0;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes moveUpDown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+<!-- Animated Header -->
+<div class="animated-header">تولید تصویر با تصویر</div>
+<!-- Loader -->
+<div id="loader">
+<div id="progress">
+<div id="bar">0%</div>
+</div>
+<div>لطفاً صبر کنید...</div>
+<div id="einsteinTip">در صورت عدم بارگذاری کامل فیلتر شکن تونو روشن کنید</div>
+</div>
+<!-- Button Container -->
+<div class="button-container"><button class="translator-button" id="translatorButton">مترجم</button> <button class="prompt-button" id="promptButton">پرامپت&zwnj;ها</button></div>
+<!-- Gradio App and Download Button -->
+<p><gradio-app src="https://black-forest-labs-flux-1-redux-dev.hf.space"></gradio-app> <button id="downloadButton">دانلود تصویر 📥</button></p>
+<!-- Image Modal -->
+<div class="modal" id="imageModal">
+<h3>پیش&zwnj;نمایش تصویر</h3>
+<img id="modalImage" alt="Image Preview" />
+<div><button id="saveImageButton">ذخیره تصویر 💾</button></div>
+<button class="close-button">لغو ❌</button></div>
+<!-- Save Notification -->
+<div class="notification" id="saveNotification">
+<p>در حال ساخت لینک دانلود تصویر..</p>
+</div>
+<!-- No Image Notification -->
+<div class="notification error" id="noImageNotification">
+<p>هیچ تصویر ساخته&zwnj;شده&zwnj;ای یافت نشد.</p>
+<button id="noImageButton">باشه</button></div>
+<!-- Copy Success Notification -->
+<div class="notification success" id="copySuccessNotification">
+<p>لینک دانلود تصویر در کلیپ&zwnj;بورد کپی شد. برای دانلود و ذخیره تصویر لینک را در مرورگر باز کنید.</p>
+<button class="close-button">بستن</button></div>
+<!-- Translator Modal -->
+<div class="modal" id="translatorModal">
+<div class="translator-container">
+<h2>مترجم فارسی به انگلیسی</h2>
+<div class="spinner" id="spinner"></div>
+<div class="result" id="resultText">ترجمه</div>
+<button id="copyButton" class="copy-button">کپی متن انگلیسی</button>
+<div class="success-message" id="successMessage">متن با موفقیت کپی شد!</div>
+<textarea id="inputText" placeholder="متن خود را به فارسی وارد کنید..."></textarea> <button class="close-button">بستن ❌</button></div>
+</div>
+<!-- Prompt List Modal -->
+<div class="modal" id="promptListModal">
+<div class="prompt-modal-content">
+<h3>دسته&zwnj;بندی پرامپت&zwnj;ها</h3>
+<!-- دسته‌بندی‌های پرامپت -->
+<div class="prompt-category" data-category="lighting">پرامپت&zwnj;های نورپردازی <span class="icon">💡</span></div>
+<div class="prompt-category" data-category="special_lighting">پرامپت&zwnj;های خاص نورپردازی <span class="icon">✨</span></div>
+<div class="prompt-category" data-category="details_quality">پرامپت&zwnj;های جزئیات و کیفیت <span class="icon">🔍</span></div>
+<div class="prompt-category" data-category="punk">پرامپت&zwnj;های Punk <span class="icon">🎸</span></div>
+<div class="prompt-category" data-category="landscape">پرامپت&zwnj;های منظره <span class="icon">🌄</span></div>
+<div class="prompt-category" data-category="colors">پرامپت&zwnj;های رنگ <span class="icon">🎨</span></div>
+<div class="prompt-category" data-category="artist_style">پرامپت&zwnj;های استایل هنرمندان <span class="icon">🖌️</span></div>
+<div class="prompt-category" data-category="iranian_art_identity">پرامپت&zwnj;های هویت هنری ایرانی <span class="icon">🏺</span></div>
+<div class="prompt-category" data-category="iranian_set_design">پرامپت&zwnj;های فضاسازی ایرانی <span class="icon">🏙️</span></div>
+<button class="pagination-button" id="closePromptListBtn">بستن</button></div>
+</div>
+<!-- Prompt List Detail Modal -->
+<div class="modal" id="promptListDetailModal">
+<div class="modal-content prompt-modal-content">
+<h3 id="promptListTitle">پرامپت&zwnj;ها</h3>
+<div class="prompt-list" id="promptList"></div>
+<div class="page-info" id="pageInfo" style="display: none;"></div>
+<div><button class="pagination-button" id="prevPageBtn" style="display: none;">بازگشت به صفحه قبلی</button> <button class="pagination-button" id="nextPageBtn" style="display: none;">ادامه صفحه بعدی</button></div>
+<button class="pagination-button close-button" id="closePromptDetailBtn">بستن</button></div>
+</div>
+<p>
+<script type="module" src="https://gradio.s3-us-west-2.amazonaws.com/5.0.1/gradio.js"></script>
+<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Function to modify text content
+                function modifyText() {
+                    document.querySelectorAll('body *').forEach(element => {
+                        element.childNodes.forEach(node => {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                if (node.nodeValue.includes('GPU')) {
+                                    node.parentElement.style.display = 'none';
+                                }
+                                const replacements = {
+                                    'Examples': 'نمونه‌ها',
+                                    'FLUX.1 [dev]': 'نسخه پیشرفته ساخت تصاویر فلاکس پرو',
+                                    'Run': 'شروع ساخت',
+                                    'Merge by': 'برای ساخت تصاویر در این نسخه حتما متن رو به زبان انگلیسی وارد کنید و یا از مترجم بالا استفاده کنید. خیلی ساده و راحت میتونید متن فارسی رو با استفاده از مترجم بالا به انگلیسی تبدیل کنید و بعدا کپی و در کادر پایین قرار بدید و شروع ساخت رو بزنید تا تصویر شما ساخته بشه . این نسخه زمان بیشتری برای تولید تصاویر لازم داره نسبت به نسخه رایگان بخاطر تولید تصاویر با کیفیت بالاتر',
+                                    'Generate': 'شروع ساخت',
+                                    'On mobile, the connection can break if this tab is unfocused or the device sleeps, losing your position in queue.': 'دریافت دستور کاربر برای ساخت تصاویر با نسخه فلاکس ترکیبی.',
+                                    'warning': 'نرم افزار هوش مصنوعی',
+                                    'Enter your prompt': 'متن ورودی انگلیسی وارد کنید',
+                                    'Input Image': 'تصویر ورودی',
+                                    'of 2 of the 12B param rectified flow transformers': '',
+                                    'Advanced settings': 'تنظیمات پیشرفته',
+                                    'and': '',
+                                    'by': '',
+                                    'Number of inference steps': 'تعداد مراحل استنتاج',
+                                    'Error': 'محدودیت چی پی یو: تصاویر زیادی تولید کردی چند لحظه بعد بیا و یا برای رفع فوری این محدودیت یک بار حالت هواپیما رو روشن کنید و دوباره خاموش کنید این محدودیت برداشته خواهد شد',
+                                    'Quality Style': 'سبک کیفیت',
+                                    'Width': 'عرض',
+                                    'Steps': 'مراحل',
+                                    'Height': 'ارتفاع',
+                                    'FLUX.1 Redux [dev]': 'ساخت تصویر با تصویر نسخه پیشرفته',
+                                    'An adapter for FLUX [dev] to create image variations': 'یک تصویر دارید میخواهید از اون تصویر با هوش مصنوعی مجدد تولید کنید؟ این ربات دقیقا همین کار انجام میده. خروجی های این ربات بر اساس فلاکس پرو است که از کیفیت فوق العاده بالایی برخوردار است',
+                                    'Resize input image': 'تغییر اندازه تصویر ورودی',
+                                    'Loading': 'در حال بارگذاری'
+                                };
+                                for (const [original, replacement] of Object.entries(replacements)) {
+                                    if (node.nodeValue.includes(original)) {
+                                        node.nodeValue = node.nodeValue.replace(original, replacement);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+
+                // Function to simulate progress bar
+                function simulateProgress(callback) {
+                    let progress = 0;
+                    const progressElement = document.getElementById('bar');
+
+                    function updateProgress() {
+                        progress += 1;
+                        if (progress > 100) progress = 100;
+                        progressElement.style.wi
